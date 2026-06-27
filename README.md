@@ -1,16 +1,50 @@
-# React + Vite
+# 🍕 papajohns-web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Web cliente para hacer pedidos de Papa John's, conectada al backend serverless descrito en `API_CONTRACT.md`.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** + **Vite**
+- **Tailwind CSS v4**
+- **React Router** para navegación
+- **Axios** para consumir la API
 
-## React Compiler
+## Estructura
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+src/
+  api/          → cliente axios (client.js) y funciones de la API (orders.js)
+  components/
+    layout/     → Navbar, Footer
+    order/      → MenuItemCard, CartSummary, OrderTracker
+    ui/         → Button
+  context/      → CartContext (carrito global con useContext)
+  pages/        → MenuPage, CheckoutPage, TrackOrderPage
+  utils/        → menu.js (catálogo), formatters.js
+```
 
-## Expanding the Oxlint configuration
+## Configuración
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+1. Instala dependencias:
+   ```bash
+   npm install
+   ```
+2. Copia el archivo de entorno y completa tu URL real del API Gateway:
+   ```bash
+   cp .env.example .env
+   ```
+3. Levanta el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+## Flujo de la app
+
+1. **Menú (`/`)**: el cliente agrega productos al carrito.
+2. **Checkout (`/checkout`)**: confirma su nombre y envía el pedido con `POST /tenants/{tenantId}/orders`.
+3. **Seguimiento (`/seguimiento/:orderId`)**: consulta `GET /tenants/{tenantId}/orders/{orderId}` cada 8 segundos y muestra el avance por las 5 etapas (Recepción → Cocina → Empaque → Despacho → Entregado).
+
+## Notas
+
+- El menú de productos es data estática (`src/utils/menu.js`) porque el contrato de API no define un endpoint de catálogo todavía.
+- El `tenantId` (sucursal) se configura en `.env` vía `VITE_TENANT_ID`.
