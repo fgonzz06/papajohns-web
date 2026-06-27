@@ -6,7 +6,7 @@ export default function Footer() {
           Papa<span className="text-sauce-600">John's</span>
         </p>
         <p className="text-sm">
-          Hecho con masa, queso y un poco de React. © {new Date().getFullYear()}
+          Hecho con masa, queso y CON REACT ALV, papa jon. © {new Date().getFullYear()}
         </p>
       </div>
     </footer>
