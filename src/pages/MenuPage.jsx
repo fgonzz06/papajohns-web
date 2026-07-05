@@ -1,13 +1,27 @@
-import { MENU } from "../utils/menu";
+import { useEffect, useState } from "react";
+import { getProducts } from "../api/products";
+import { MENU as FALLBACK_MENU } from "../utils/menu";
 import { useCart } from "../context/CartContext";
 import MenuItemCard from "../components/order/MenuItemCard";
 
 export default function MenuPage() {
   const { addItem } = useCart();
+  const [menu, setMenu] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    getProducts()
+      .then((data) => setMenu(data))
+      .catch(() => {
+        setErrorMsg("No pudimos cargar el menú en vivo, mostrando menú de referencia.");
+        setMenu(FALLBACK_MENU);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
   return (
     <div>
-      {/* Hero */}
       <section className="relative bg-crust-950 overflow-hidden">
         <div
           className="absolute inset-0 opacity-20"
@@ -30,9 +44,14 @@ export default function MenuPage() {
         </div>
       </section>
 
-      {/* Menú */}
       <main className="max-w-6xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
-        {MENU.map((section) => (
+        {isLoading && (
+          <p className="text-center text-crust-950/50 py-20 text-lg">Cargando menú…</p>
+        )}
+        {errorMsg && (
+          <p className="text-center text-sauce-600 text-sm mb-8">{errorMsg}</p>
+        )}
+        {menu?.map((section) => (
           <section key={section.category} className="mb-12">
             <h2 className="font-display text-2xl sm:text-3xl font-semibold text-crust-950 mb-6">
               {section.category}
