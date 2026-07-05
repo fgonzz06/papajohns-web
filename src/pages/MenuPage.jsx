@@ -1,24 +1,62 @@
 import { useEffect, useState } from "react";
 import { getProducts } from "../api/products";
-import { MENU as FALLBACK_MENU } from "../utils/menu";
 import { useCart } from "../context/CartContext";
-import MenuItemCard from "../components/order/MenuItemCard";
+import { formatCurrency } from "../utils/formatters";
+import Button from "../components/ui/Button";
+
+function ProductCard({ product, onAdd }) {
+  return (
+    <article className="group bg-dough-100 rounded-2xl overflow-hidden border border-crust-950/5 hover:border-sauce-600/30 hover:shadow-lg transition-all flex flex-col">
+      <div className="bg-white aspect-square overflow-hidden">
+        <img
+          src={product.imageUrl}
+          alt={product.name}
+          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+        />
+      </div>
+      <div className="p-5 flex flex-col flex-1 gap-3">
+        <div className="flex items-start justify-between gap-2 flex-1">
+          <h3 className="font-display text-base font-semibold text-crust-950 leading-snug">
+            {product.name}
+          </h3>
+          <span className="font-mono text-sm text-basil-700 font-medium whitespace-nowrap">
+            {formatCurrency(product.price)}
+          </span>
+        </div>
+        <Button
+          variant="ghost"
+          onClick={() => onAdd(product)}
+          className="w-full group-hover:bg-sauce-600 group-hover:text-dough-50 group-hover:border-sauce-600"
+        >
+          Agregar al pedido
+        </Button>
+      </div>
+    </article>
+  );
+}
 
 export default function MenuPage() {
   const { addItem } = useCart();
-  const [menu, setMenu] = useState(null);
+  const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     getProducts()
-      .then((data) => setMenu(data))
-      .catch(() => {
-        setErrorMsg("No pudimos cargar el menú en vivo, mostrando menú de referencia.");
-        setMenu(FALLBACK_MENU);
-      })
+      .then(setProducts)
+      .catch(() => setErrorMsg("No pudimos cargar el menú. Intenta de nuevo."))
       .finally(() => setIsLoading(false));
   }, []);
+
+  // addItem espera { id, name, price }, adaptamos productId → id
+  function handleAdd(product) {
+    addItem({
+      id: product.productId,
+      name: product.name,
+      price: product.price,
+    });
+  }
 
   return (
     <div>
@@ -51,18 +89,18 @@ export default function MenuPage() {
         {errorMsg && (
           <p className="text-center text-sauce-600 text-sm mb-8">{errorMsg}</p>
         )}
-        {menu?.map((section) => (
-          <section key={section.category} className="mb-12">
+        {!isLoading && products.length > 0 && (
+          <section>
             <h2 className="font-display text-2xl sm:text-3xl font-semibold text-crust-950 mb-6">
-              {section.category}
+              Nuestros productos
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {section.items.map((product) => (
-                <MenuItemCard key={product.id} product={product} onAdd={addItem} />
+              {products.map((product) => (
+                <ProductCard key={product.productId} product={product} onAdd={handleAdd} />
               ))}
             </div>
           </section>
-        ))}
+        )}
       </main>
     </div>
   );

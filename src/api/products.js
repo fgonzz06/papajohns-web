@@ -13,5 +13,5 @@ const productsClient = axios.create({
  */
 export async function getProducts() {
   const { data } = await productsClient.get(`/tenants/${TENANT_ID}/products`);
-  return data;
+  return data.products;
 }
