@@ -1,7 +1,11 @@
 const variants = {
-  primary: "bg-sauce-600 hover:bg-sauce-700 text-dough-50",
-  secondary: "bg-crust-950 hover:bg-crust-800 text-dough-50",
-  ghost: "bg-transparent hover:bg-dough-100 text-crust-950 border border-crust-950/20",
+  // Verde oscuro: botones de acción "serios" (Confirmar pedido, Buscar)
+  primary: "bg-forest-700 hover:bg-forest-900 text-white",
+  // Lima: el color de acento real del sitio (carrito, "+", CTAs rápidos)
+  lime: "bg-lime-400 hover:bg-lime-500 text-forest-700",
+  secondary: "bg-ink-950 hover:bg-forest-900 text-white",
+  // Píldora blanca con borde negro, igual a las categorías del sitio real
+  ghost: "bg-white hover:bg-mist-100 text-ink-950 border-2 border-ink-950",
 };
 
 export default function Button({
@@ -16,7 +20,7 @@ export default function Button({
     <button
       type={type}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold px-6 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-bold px-6 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

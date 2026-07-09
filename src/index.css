@@ -2,15 +2,22 @@
 @import "tailwindcss";
 
 @theme {
-  /* === Paleta "horno de leña" === */
-  --color-crust-950: #1a1410;   /* carbon casi negro, texto principal */
-  --color-crust-800: #2e2419;   /* superficies oscuras (navbar, footer) */
-  --color-sauce-600: #c8102e;   /* rojo Papa John's, CTA principal */
-  --color-sauce-700: #a30d25;   /* hover del rojo */
-  --color-dough-50:  #fbf6ec;   /* fondo general, masa cruda */
-  --color-dough-100: #f3e2c7;   /* tarjetas, masa horneada */
-  --color-cheese-400:#e8a93b;   /* acento dorado, highlights/hover */
-  --color-basil-700: #4a5d23;   /* verde oregano, estados positivos */
+  /* === Paleta real de papajohns.com.pe (verde + lima + negro), === */
+  /* === sacada por muestreo de píxeles de una captura real del sitio === */
+  --color-ink-950:   #121212;   /* texto principal, precios, encabezados */
+  --color-forest-900:#1c3319;   /* superficies oscuras: barra utilitaria, footer */
+  --color-forest-700:#2d5d2a;   /* verde marca: logo, links de nav, texto sobre lima */
+  --color-lime-400:  #cfeb0c;   /* CTA principal: carrito, botones "+" */
+  --color-lime-500:  #b8d40a;   /* hover del lima */
+  --color-white:     #ffffff;   /* fondo general */
+  --color-mist-100:  #f5f7f2;   /* tarjetas / secciones alternas, tinte verde muy sutil */
+  --color-gray-500:  #666666;   /* texto secundario, precio tachado */
+  --color-discount:  #ee0009;   /* SOLO para el badge chiquito de descuento */
+  --color-banner-400:#ffd366;   /* franja amarilla de delivery gratis */
+  --color-banner-700:#1c6c24;   /* texto verde sobre la franja amarilla */
+  --color-hero-500:  #008d00;   /* verde brillante de los banners hero */
+  --color-cream-100: #f9e9dc;   /* botón crema del hero (COMPRAR) */
+  --color-lime-200:  #e6f485;   /* lima pálido: botones deshabilitados */
 
   /* === Tipografia === */
   --font-display: "Fraunces", serif;
@@ -24,8 +31,8 @@ html {
 
 body {
   font-family: var(--font-body);
-  background-color: var(--color-dough-50);
-  color: var(--color-crust-950);
+  background-color: var(--color-white);
+  color: var(--color-ink-950);
 }
 
 /* Respeta preferencia de movimiento reducido */
@@ -40,7 +47,7 @@ body {
 
 /* Foco visible accesible en toda la app */
 :focus-visible {
-  outline: 3px solid var(--color-cheese-400);
+  outline: 3px solid var(--color-lime-400);
   outline-offset: 2px;
   border-radius: 2px;
 }

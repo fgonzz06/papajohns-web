@@ -2,35 +2,72 @@ import { createContext, useContext, useMemo, useState } from "react";
 
 const CartContext = createContext(null);
 
-export function CartProvider({ children }) {
-  const [items, setItems] = useState([]); // [{ id, name, price, qty }]
+/**
+ * Carrito con soporte de opciones por línea (sabor, masa, extras).
+ * Dos líneas del mismo producto con opciones distintas se guardan por
+ * separado; el identificador de línea es productId + firma de opciones.
+ */
+function buildLineId(productId, options) {
+  if (!options || Object.keys(options).length === 0) return String(productId);
+  const sig = Object.entries(options)
+    .filter(([, v]) => v != null && v !== "")
+    .map(([k, v]) => `${k}:${Array.isArray(v) ? v.join("+") : v}`)
+    .sort()
+    .join("|");
+  return `${productId}__${sig}`;
+}
 
-  function addItem(product) {
+export function CartProvider({ children }) {
+  // [{ lineId, id, name, price, qty, options?, optionsLabel? }]
+  const [items, setItems] = useState([]);
+
+  /**
+   * @param product  { id, name, price }
+   * @param config   { qty?, options?, optionsLabel?, unitSurcharge? }
+   */
+  function addItem(product, config = {}) {
+    const { qty = 1, options = null, optionsLabel = "", unitSurcharge = 0 } = config;
+    const lineId = buildLineId(product.id, options);
+    const unitPrice = product.price + unitSurcharge;
+
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
+      const existing = prev.find((i) => i.lineId === lineId);
       if (existing) {
         return prev.map((i) =>
-          i.id === product.id ? { ...i, qty: i.qty + 1 } : i
+          i.lineId === lineId ? { ...i, qty: i.qty + qty } : i
         );
       }
-      return [...prev, { id: product.id, name: product.name, price: product.price, qty: 1 }];
+      return [
+        ...prev,
+        {
+          lineId,
+          id: product.id,
+          name: product.name,
+          price: unitPrice,
+          qty,
+          options,
+          optionsLabel,
+        },
+      ];
     });
   }
 
-  function increment(id) {
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty: i.qty + 1 } : i)));
+  function increment(lineId) {
+    setItems((prev) =>
+      prev.map((i) => (i.lineId === lineId ? { ...i, qty: i.qty + 1 } : i))
+    );
   }
 
-  function decrement(id) {
+  function decrement(lineId) {
     setItems((prev) =>
       prev
-        .map((i) => (i.id === id ? { ...i, qty: i.qty - 1 } : i))
+        .map((i) => (i.lineId === lineId ? { ...i, qty: i.qty - 1 } : i))
         .filter((i) => i.qty > 0)
     );
   }
 
-  function removeItem(id) {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  function removeItem(lineId) {
+    setItems((prev) => prev.filter((i) => i.lineId !== lineId));
   }
 
   function clearCart() {
