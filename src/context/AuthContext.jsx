@@ -1,62 +1,66 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { apiClient } from "../api/client";
 
-/**
- * Autenticación SIMULADA (demo académica): los "usuarios" viven en
- * localStorage del navegador. No hay backend de auth ni contraseñas
- * seguras — no usar nunca en producción.
- */
 const AuthContext = createContext(null);
-
-const SESSION_KEY = "pj_session";
-const USERS_KEY = "pj_users";
-
-function readJSON(key, fallback) {
-  try {
-    return JSON.parse(localStorage.getItem(key)) ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
+const TOKEN_KEY = "pj_token";
+const USER_KEY  = "pj_user";
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); // { name, email }
+  const [user, setUser]   = useState(() => {
+    try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
+  });
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
 
+  // Sincroniza el token en el cliente axios cada vez que cambia
   useEffect(() => {
-    setUser(readJSON(SESSION_KEY, null));
-  }, []);
-
-  function register({ name, email, password }) {
-    const users = readJSON(USERS_KEY, {});
-    if (users[email]) {
-      return { ok: false, error: "Ya existe una cuenta con ese correo." };
+    if (token) {
+      apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete apiClient.defaults.headers.common["Authorization"];
     }
-    users[email] = { name, email, password };
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    const session = { name, email };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    setUser(session);
-    return { ok: true };
+  }, [token]);
+
+  function saveSession(data) {
+    // El backend puede devolver { token, user } o { token, name, email } — cubrimos ambos
+    const newToken = data.token;
+    const newUser  = data.user ?? { name: data.name, email: data.email };
+    localStorage.setItem(TOKEN_KEY, newToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(newUser));
+    setToken(newToken);
+    setUser(newUser);
   }
 
-  function login({ email, password }) {
-    const users = readJSON(USERS_KEY, {});
-    const record = users[email];
-    if (!record || record.password !== password) {
-      return { ok: false, error: "Correo o contraseña incorrectos." };
+  async function register({ name, email, password }) {
+    try {
+      const { data } = await apiClient.post("/auth/register", { name, email, password });
+      saveSession(data);
+      return { ok: true };
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Error al registrarse. Intenta de nuevo.";
+      return { ok: false, error: msg };
     }
-    const session = { name: record.name, email };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    setUser(session);
-    return { ok: true };
+  }
+
+  async function login({ email, password }) {
+    try {
+      const { data } = await apiClient.post("/auth/login", { email, password });
+      saveSession(data);
+      return { ok: true };
+    } catch (err) {
+      const msg = err?.response?.data?.message || "Correo o contraseña incorrectos.";
+      return { ok: false, error: msg };
+    }
   }
 
   function logout() {
-    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    setToken(null);
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, register, login, logout }}>
+    <AuthContext.Provider value={{ user, token, register, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

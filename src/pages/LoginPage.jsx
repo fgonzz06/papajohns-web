@@ -24,32 +24,32 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  function handleLogin(e) {
-    e.preventDefault();
-    setErrorMsg("");
-    if (!email.trim() || !password) {
-      setErrorMsg("Completa tu correo y contraseña.");
-      return;
-    }
-    const res = login({ email: email.trim().toLowerCase(), password });
-    if (!res.ok) return setErrorMsg(res.error);
-    navigate("/");
+  async function handleLogin(e) {
+  e.preventDefault();
+  setErrorMsg("");
+  if (!email.trim() || !password) {
+    setErrorMsg("Completa tu correo y contraseña.");
+    return;
   }
+  const res = await login({ email: email.trim().toLowerCase(), password });
+  if (!res.ok) return setErrorMsg(res.error);
+  navigate("/");
+  }  
 
-  function handleRegister(e) {
-    e.preventDefault();
-    setErrorMsg("");
-    if (!name.trim() || !email.trim() || password.length < 6) {
-      setErrorMsg("Completa nombre, correo y una contraseña de al menos 6 caracteres.");
-      return;
-    }
-    const res = register({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      password,
-    });
-    if (!res.ok) return setErrorMsg(res.error);
-    navigate("/");
+  async function handleRegister(e) {
+  e.preventDefault();
+  setErrorMsg("");
+  if (!name.trim() || !email.trim() || password.length < 6) {
+    setErrorMsg("Completa nombre, correo y una contraseña de al menos 6 caracteres.");
+    return;
+  }
+  const res = await register({
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
+    password,
+  });
+  if (!res.ok) return setErrorMsg(res.error);
+  navigate("/");
   }
 
   const canSubmitLogin = email.trim() && password;

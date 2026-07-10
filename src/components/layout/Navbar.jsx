@@ -81,7 +81,7 @@ export default function Navbar() {
             >
               <Icon name="user" className="w-5 h-5" />
               <span className="text-[11px] leading-tight font-semibold text-left">
-                Hola, {user.name.split(" ")[0]}<br />CERRAR SESIÓN
+                Hola, {user.name?.split(" ")[0] ?? user.email ?? "tú"}<br />CERRAR SESIÓN
               </span>
             </button>
           ) : (
