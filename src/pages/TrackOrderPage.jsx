@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getOrder } from "../api/orders";
 import OrderTracker from "../components/order/OrderTracker";
@@ -58,7 +58,6 @@ export default function TrackOrderPage() {
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const deliveryTimerRef = useRef(null);
 
   const fetchOrder = useCallback(async (id) => {
     if (!id) return;
@@ -79,43 +78,19 @@ export default function TrackOrderPage() {
     }
   }, []);
 
-  // Carga inicial si viene el número en la URL
   useEffect(() => {
     if (orderIdFromUrl) {
       fetchOrder(orderIdFromUrl);
     }
   }, [orderIdFromUrl, fetchOrder]);
 
-  // Polling mientras el pedido no esté en DESPACHO o ENTREGADO
   useEffect(() => {
-    if (!order || order.status === "ENTREGADO" || order.status === "DESPACHO") return;
+    if (!order || order.status === "ENTREGADO") return;
     const interval = setInterval(() => {
       fetchOrder(order.orderId);
     }, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [order, fetchOrder]);
-
-  // Cuando llega a DESPACHO, simula entrega en 10-15 minutos
-  useEffect(() => {
-    if (!order || order.status !== "DESPACHO") return;
-    if (deliveryTimerRef.current) clearTimeout(deliveryTimerRef.current);
-    const delay = (Math.floor(Math.random() * 6) + 10) * 60 * 1000;
-    deliveryTimerRef.current = setTimeout(() => {
-      setOrder((prev) => ({
-        ...prev,
-        status: "ENTREGADO",
-        stages: {
-          ...prev.stages,
-          ENTREGADO: {
-            startedAt: new Date().toISOString(),
-            endedAt: new Date().toISOString(),
-            responsable: "Sistema",
-          },
-        },
-      }));
-    }, delay);
-    return () => clearTimeout(deliveryTimerRef.current);
-  }, [order?.status]);
 
   function handleSearch(e) {
     e.preventDefault();
