@@ -13,9 +13,6 @@ const CHANNELS = [
   { id: "WHATSAPP", label: "WhatsApp" },
 ];
 
-/**
- * Preguntas frecuentes (texto propio, adaptado a la demo académica).
- */
 const FAQS = [
   {
     q: "¿Cómo hacer seguimiento de pedido en Papa Johns?",
@@ -89,58 +86,50 @@ export default function TrackOrderPage() {
     }
   }, [orderIdFromUrl, fetchOrder]);
 
-  // Polling mientras el pedido no esté ENTREGADO
-  // Carga inicial si viene el número en la URL
-useEffect(() => {
-  if (orderIdFromUrl) {
-    fetchOrder(orderIdFromUrl);
-  }
-}, [orderIdFromUrl, fetchOrder]);
+  // Polling mientras el pedido no esté en DESPACHO o ENTREGADO
+  useEffect(() => {
+    if (!order || order.status === "ENTREGADO" || order.status === "DESPACHO") return;
+    const interval = setInterval(() => {
+      fetchOrder(order.orderId);
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [order, fetchOrder]);
 
-// Polling mientras el pedido no esté en DESPACHO o ENTREGADO
-useEffect(() => {
-  if (!order || order.status === "ENTREGADO" || order.status === "DESPACHO") return;
-  const interval = setInterval(() => {
-    fetchOrder(order.orderId);
-  }, POLL_INTERVAL_MS);
-  return () => clearInterval(interval);
-}, [order, fetchOrder]);
-
-// Cuando llega a DESPACHO, simula entrega en 10-15 minutos
-useEffect(() => {
-  if (!order || order.status !== "DESPACHO") return;
-
-  // Limpia cualquier timer previo
-  if (deliveryTimerRef.current) clearTimeout(deliveryTimerRef.current);
-
-  const delay = (Math.floor(Math.random() * 6) + 10) * 60 * 1000; // 10-15 min en ms
-  deliveryTimerRef.current = setTimeout(() => {
-    setOrder((prev) => ({
-      ...prev,
-      status: "ENTREGADO",
-      stages: {
-        ...prev.stages,
-        ENTREGADO: {
-          startedAt: new Date().toISOString(),
-          endedAt: new Date().toISOString(),
-          responsable: "Sistema",
+  // Cuando llega a DESPACHO, simula entrega en 10-15 minutos
+  useEffect(() => {
+    if (!order || order.status !== "DESPACHO") return;
+    if (deliveryTimerRef.current) clearTimeout(deliveryTimerRef.current);
+    const delay = (Math.floor(Math.random() * 6) + 10) * 60 * 1000;
+    deliveryTimerRef.current = setTimeout(() => {
+      setOrder((prev) => ({
+        ...prev,
+        status: "ENTREGADO",
+        stages: {
+          ...prev.stages,
+          ENTREGADO: {
+            startedAt: new Date().toISOString(),
+            endedAt: new Date().toISOString(),
+            responsable: "Sistema",
+          },
         },
-      },
-    }));
-  }, delay);
+      }));
+    }, delay);
+    return () => clearTimeout(deliveryTimerRef.current);
+  }, [order?.status]);
 
-  return () => clearTimeout(deliveryTimerRef.current);
-}, [order?.status]);
+  function handleSearch(e) {
+    e.preventDefault();
+    if (!orderIdInput.trim()) return;
+    navigate(`/seguimiento/${orderIdInput.trim()}`);
+  }
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-      {/* Tarjeta central de búsqueda, como el sitio real */}
       <div className="border border-black/15 rounded-lg bg-white px-6 sm:px-12 py-10 sm:py-14 shadow-sm">
         <form
           onSubmit={handleSearch}
           className="flex flex-col sm:flex-row items-center gap-8 sm:gap-10"
         >
-          {/* Moto */}
           <div className="shrink-0 text-forest-700">
             <Icon name="scooter" className="w-24 h-24" />
             <div className="h-1.5 bg-mist-100 rounded-full mt-1" aria-hidden="true" />
@@ -233,7 +222,6 @@ useEffect(() => {
         </p>
       )}
 
-      {/* Resultado del seguimiento */}
       {order && (
         <div className="space-y-6 mt-10">
           <OrderTracker currentStatus={order.status} stages={order.stages} />
@@ -250,9 +238,7 @@ useEffect(() => {
             <ul className="text-sm text-ink-950/70 space-y-1 mb-3">
               {order.items?.map((item, idx) => (
                 <li key={idx} className="flex justify-between">
-                  <span>
-                    {item.qty}× {item.name}
-                  </span>
+                  <span>{item.qty}× {item.name}</span>
                   <span className="font-mono">{formatCurrency(item.price * item.qty)}</span>
                 </li>
               ))}
@@ -265,7 +251,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Preguntas frecuentes */}
       <section className="mt-16 border-t border-black/10 pt-12">
         <h2 className="font-display text-xl sm:text-2xl font-extrabold text-ink-950 text-center mb-8">
           Preguntas frecuentes sobre el seguimiento Papa Johns
